@@ -1,0 +1,71 @@
+xpath使用
+
+1,编码问题,处理,网页中打开源代码,查查看编码情况:
+def decode_html(html, charsets=('gbk','utf-8')):
+     # 编码处理
+     page_html=''
+     for charset in charsets:
+         try:
+             page_html = html.decode(charset)
+             break
+         except Exception as e:
+             pass
+             # print(e)
+             # print('error')
+     return page_html
+
+2,获取页面信息,获取到信息后处理编码问题;
+def get_html(url):
+    # 获取url对应页面信息html
+    header = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko)Chrome/65.0.3325.181 Safari/537.36'}
+
+    req = Request(url, headers=header)
+    res = urlopen(req)
+    prpage_html = decode_html(res.read())
+    return prpage_html
+
+3,连接数据库mysql
+def get_mysql(sql, params_list):
+    # 连接mysql数据库
+    conn = pymysql.connect(host='localhost',port=3306, user='root', password='123456', database='souhu_spider',charset='utf8')
+    cursor = conn.cursor()
+    cursor.executemany(sql, params_list)
+    conn.commit()
+    cursor.close()
+
+4,页面爬取需要信息
+工具:
+1,拿取页面
+from urllib.request import Request,urlopen
+ req = Request(url=url,headers=header)
+    res = urlopen(req)  # 获取页面
+
+2,处理输入汉字编码问题;
+from urllib import parse
+ msg = input('请输入搜索信息:')
+    search = parse.urlencode({'wd': msg})
+    url = 'https://www.baidu.com/s?%s' % search
+
+3,解析页面;
+from bs4 import BeautifulSoup
+str_res = BeautifulSoup(res)  # 解析页面
+all_list = str_res.findAll("table",{"class": 'newlist'}) #拿去table,class='newlist'的标签
+all_list = str_res.findAll("a") #拿去所有a标签
+
+find()和findAll可并列使用:
+例子:
+all_list = str_res.find("div", {"class":'f14list'}).findAll("a")
+查找div,class='f14list'下面所有的a标签
+在url处理上,常使用replace替代方法:page_url.replace('/tags=?/', '')
+
+4,xpath
+应用:
+str_res = get_html(url)
+foo = etree.HTML(str_res)
+a = foo.xpath(all_xpath)
+for li in all_list1:
+    list_href += li.xpath('./@href')
+for li in all_list2:
+    list_text += li.xpath('./text()')
+
